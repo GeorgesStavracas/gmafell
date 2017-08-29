@@ -1,0 +1,232 @@
+/* gmfl-debug.h.in
+ *
+ * Copyright (C) 2017 Georges Basile Stavracas Neto <georges.stavracas@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef GMFL_DEBUG_H
+#define GMFL_DEBUG_H
+
+#include <glib.h>
+
+/**
+ * SECTION:gmfl-debug
+ * @short_description: Debugging macros
+ * @title:Debugging
+ * @stability:stable
+ *
+ * Macros used for tracing and debugging code. These
+ * are only valid when Mafell is compiled with tracing
+ * suppoer (pass `--enable-tracing` to the configure
+ * script to do that).
+ */
+
+G_BEGIN_DECLS
+
+#ifndef GMFL_ENABLE_TRACE
+# define GMFL_ENABLE_TRACE @ENABLE_TRACING@
+#endif
+#if GMFL_ENABLE_TRACE != 1
+# undef GMFL_ENABLE_TRACE
+#endif
+
+/**
+ * GMFL_LOG_LEVEL_TRACE: (skip)
+ */
+#ifndef GMFL_LOG_LEVEL_TRACE
+# define GMFL_LOG_LEVEL_TRACE ((GLogLevelFlags)(1 << G_LOG_LEVEL_USER_SHIFT))
+#endif
+
+#ifdef GMFL_ENABLE_TRACE
+
+/**
+ * GMFL_TRACE_MSG:
+ * @fmt: printf-like format of the message
+ * @...: arguments for @fmt
+ *
+ * Prints a trace message.
+ */
+# define GMFL_TRACE_MSG(fmt, ...)                                        \
+   g_log(G_LOG_DOMAIN, GMFL_LOG_LEVEL_TRACE, "  MSG: %s():%d: " fmt,     \
+         G_STRFUNC, __LINE__, ##__VA_ARGS__)
+
+/**
+ * GMFL_PROBE:
+ *
+ * Prints a probing message. Put this macro in the code when
+ * you want to check the program reaches a certain section
+ * of code.
+ */
+# define GMFL_PROBE                                                      \
+   g_log(G_LOG_DOMAIN, GMFL_LOG_LEVEL_TRACE, "PROBE: %s():%d",           \
+         G_STRFUNC, __LINE__)
+
+/**
+ * GMFL_TODO:
+ * @_msg: the message to print
+ *
+ * Prints a TODO message.
+ */
+# define GMFL_TODO(_msg)                                                 \
+   g_log(G_LOG_DOMAIN, GMFL_LOG_LEVEL_TRACE, " TODO: %s():%d: %s",       \
+         G_STRFUNC, __LINE__, _msg)
+
+/**
+ * GMFL_ENTRY:
+ *
+ * Prints an entry message. This shouldn't be used in
+ * critical functions. Place this at the beggining of
+ * the function, before any assertion.
+ */
+# define GMFL_ENTRY                                                      \
+   g_log(G_LOG_DOMAIN, GMFL_LOG_LEVEL_TRACE, "ENTRY: %s():%d",           \
+         G_STRFUNC, __LINE__)
+
+/**
+ * GMFL_EXIT:
+ *
+ * Prints an exit message. This shouldn't be used in
+ * critical functions. Place this at the end of
+ * the function, after any relevant code. If the
+ * function returns something, use GMFL_RETURN()
+ * instead.
+ */
+# define GMFL_EXIT                                                       \
+   G_STMT_START {                                                        \
+      g_log(G_LOG_DOMAIN, GMFL_LOG_LEVEL_TRACE, " EXIT: %s():%d",        \
+            G_STRFUNC, __LINE__);                                        \
+      return;                                                            \
+   } G_STMT_END
+
+/**
+ * GMFL_GOTO:
+ * @_l: goto tag
+ *
+ * Logs a goto jump.
+ */
+# define GMFL_GOTO(_l)                                                   \
+   G_STMT_START {                                                        \
+      g_log(G_LOG_DOMAIN, GMFL_LOG_LEVEL_TRACE, " GOTO: %s():%d ("#_l")",\
+            G_STRFUNC, __LINE__);                                        \
+      goto _l;                                                           \
+   } G_STMT_END
+
+/**
+ * GMFL_RETURN:
+ * @_r: the return value.
+ *
+ * Prints an exit message, and returns @_r. See #GMFL_EXIT.
+ */
+# define GMFL_RETURN(_r)                                                 \
+   G_STMT_START {                                                        \
+      g_log(G_LOG_DOMAIN, GMFL_LOG_LEVEL_TRACE, " EXIT: %s():%d ",       \
+            G_STRFUNC, __LINE__);                                        \
+      return _r;                                                         \
+   } G_STMT_END
+
+#else
+
+/**
+ * GMFL_TODO:
+ * @_msg: the message to print
+ *
+ * Prints a TODO message.
+ */
+# define GMFL_TODO(_msg)
+
+/**
+ * GMFL_PROBE:
+ *
+ * Prints a probing message.
+ */
+# define GMFL_PROBE
+
+/**
+ * GMFL_TRACE_MSG:
+ * @fmt: printf-like format of the message
+ * @...: arguments for @fmt
+ *
+ * Prints a trace message.
+ */
+# define GMFL_TRACE_MSG(fmt, ...)
+
+/**
+ * GMFL_ENTRY:
+ *
+ * Prints a probing message. This shouldn't be used in
+ * critical functions. Place this at the beggining of
+ * the function, before any assertion.
+ */
+# define GMFL_ENTRY
+
+/**
+ * GMFL_GOTO:
+ * @_l: goto tag
+ *
+ * Logs a goto jump.
+ */
+# define GMFL_GOTO(_l)   goto _l
+
+/**
+ * GMFL_EXIT:
+ *
+ * Prints an exit message. This shouldn't be used in
+ * critical functions. Place this at the end of
+ * the function, after any relevant code. If the
+ * function returns somethin, use GMFL_RETURN()
+ * instead.
+ */
+# define GMFL_EXIT       return
+
+/**
+ * GMFL_RETURN:
+ * @_r: the return value.
+ *
+ * Prints an exit message, and returns @_r. See #GMFL_EXIT.
+ */
+# define GMFL_RETURN(_r) return _r
+#endif
+
+/**
+ * _GMFL_BUG: (skip)
+ */
+#define _GMFL_BUG(Component, Description, File, Line, Func, ...)                        \
+  G_STMT_START {                                                                        \
+    g_printerr ("-----------------------------------------------------------------\n"); \
+    g_printerr ("You've found a bug in Mafell or one of its dependent libraries.\n");   \
+    g_printerr ("Please help us help you by filing a bug report at:\n");                \
+    g_printerr ("\n");                                                                  \
+    g_printerr ("@BUGREPORT_URL@&component=%s\n", Component);                           \
+    g_printerr ("\n");                                                                  \
+    g_printerr ("%s:%d in function %s()\n", File, Line, Func);                          \
+    g_printerr ("\n");                                                                  \
+    g_printerr (Description"\n", ##__VA_ARGS__);                                        \
+    g_printerr ("-----------------------------------------------------------------\n"); \
+  } G_STMT_END
+
+/**
+ * GMFL_BUG:
+ * @Component: the component
+ * @Description: the description
+ * @...: extra arguments
+ *
+ * Logs a bug-friendly message.
+ */
+#define GMFL_BUG(Component, Description, ...) \
+  _GMFL_BUG(Component, Description, __FILE__, __LINE__, G_STRFUNC, ##__VA_ARGS__)
+
+G_END_DECLS
+
+#endif /* GMFL_DEBUG_H */

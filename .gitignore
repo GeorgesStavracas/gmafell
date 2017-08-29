@@ -1,0 +1,4 @@
+.buildconfig
+Makefile
+_build/
+**/tags.*
